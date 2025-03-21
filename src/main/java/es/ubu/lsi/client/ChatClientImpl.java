@@ -32,15 +32,24 @@ public class ChatClientImpl implements ChatClient {
 
 			// Mensaje del usuario al servidor
 			outputStream.writeObject(username);
-			// outputStream.flush();
+			outputStream.flush();
 
 			// Recibimos ID del servidor
 			id = inputStream.readInt();
 			System.out.println("Conectado como " + username + " con ID " + id);
 
 			// Hilo
-			new Thread(new ChatClientListener()).start();
-
+	        new Thread(() -> {
+	            while (carryOn) {
+	                try {
+	                    ChatMessage msg = (ChatMessage) inputStream.readObject();
+	                    System.out.println(msg.getMessage());
+	                } catch (IOException | ClassNotFoundException e) {
+	                    System.out.println("[Error] Conexión cerrada.");
+	                    break;
+	                }
+	            }
+	        }).start();
 			// Leer los mensajes
 			Scanner scanner = new Scanner(System.in);
 			while (carryOn) {
@@ -49,13 +58,17 @@ public class ChatClientImpl implements ChatClient {
 					outputStream.writeObject(new ChatMessage(id, MessageType.LOGOUT, ""));
 					outputStream.flush();
 					carryOn = false;
+					break; // Incorporación nueva
 				} else {
 					outputStream.writeObject(new ChatMessage(id, MessageType.MESSAGE, message));
 					outputStream.flush();
 				}
-				scanner.close();
-				return true;
 			}
+			// Cerramos todos los recursos
+			scanner.close();
+			outputStream.close();
+			inputStream.close();
+			socket.close();
 
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
@@ -64,7 +77,7 @@ public class ChatClientImpl implements ChatClient {
 			e.printStackTrace();
 			return false;
 		}
-		
+
 		return false;
 	}
 
@@ -97,22 +110,24 @@ public class ChatClientImpl implements ChatClient {
 	}
 
 	private class ChatClientListener implements Runnable {
+		private ObjectInputStream inputStream;
+
+		public ChatClientListener(ObjectInputStream inputStream) {
+			this.inputStream = inputStream;
+		}
 
 		@Override
 		public void run() {
-			try (Socket socket = new Socket(server, port);
-				 ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream())) {
-				while (carryOn) {
+			while (carryOn) {
+				try {
 					ChatMessage msg = (ChatMessage) inputStream.readObject();
-					System.out.println(msg.getMessage());
+					System.out.println("Mensaje recibido: " + msg.getMessage());
+				} catch (ClassNotFoundException | IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
 			}
-
 		}
-	}
 
+	}
 }
