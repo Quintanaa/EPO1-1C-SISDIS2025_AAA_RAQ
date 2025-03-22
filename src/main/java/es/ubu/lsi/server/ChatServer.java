@@ -3,7 +3,10 @@ package es.ubu.lsi.server;
 import es.ubu.lsi.common.ChatMessage;
 
 /**
- * Interfaz que define la signatura de los métodos de arranque, multidifusión, eliminación de cliente y apagado.
+ * Define la signatura de los métodos de arranque, multidifusión, eliminación de cliente y apagado. 
+ * 
+ * @author Rubén Alonso Quintana
+ *
  */
 public interface ChatServer {
 	

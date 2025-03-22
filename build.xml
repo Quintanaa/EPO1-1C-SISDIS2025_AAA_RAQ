@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="ChatServer" basedir="." default="main">
+
+	<!-- Definición de propiedades -->
+	<property name="src.dir" value="src" />
+	<property name="build.dir" value="build" />
+	<property name="classes.dir" value="${build.dir}/classes" />
+	<property name="jar.dir" value="${build.dir}/jar" />
+	<property name="main-class" value="es.ubu.lsi.client.ChatClientImpl" />
+
+	<property name="lib.dir" value="lib" />
+
+	<property name="doc.dir" value="doc" />
+
+	<property name="jar.name" value="ChatServer.jar" />
+
+	<!-- Definir classpath -->
+	<path id="classpath">
+		<fileset dir="${lib.dir}" includes="**/*.jar" />
+	</path>
+
+	<!-- Limpiar archivos -->
+	<target name="clean" description="Elimina archivos generados">
+		<echo message="Eliminando archivos generados..." />
+		<delete dir="build" />
+		<delete dir="doc" />
+	</target>
+
+	<!-- Crear carpetas -->
+	<target name="init" description="Inicializa directorios">
+		<echo message="Inicializando directorios..." />
+		<mkdir dir="${classes.dir}" />
+		<mkdir dir="${jar.dir}" />
+		<mkdir dir="${doc.dir}" />
+		<mkdir dir="${lib.dir}" />
+	</target>
+
+	<!-- Compilación -->
+	<target name="compile" depends="init" description="Compila los archivos fuente">
+		<echo message="Compilando archivos fuente..." />
+		<javac srcdir="${src.dir}" destdir="${classes.dir}" includeantruntime="false">
+			<classpath>
+				<fileset dir="${lib.dir}" includes="**/*.jar" />
+			</classpath>
+		</javac>
+	</target>
+
+	<!-- Generación del JAR -->
+	<target name="jar" depends="compile" description="Genera el JAR">
+		<echo message="Empaquetando en ${jar.name}..." />
+		<jar destfile="${jar.dir}/${jar.name}" basedir="${classes.dir}">
+			<manifest>
+				<attribute name="Main-Class" value="${main-class}" />
+			</manifest>
+		</jar>
+	</target>
+
+	<!-- Ejecutar el JAR -->
+	<target name="run" depends="jar" description="Ejecuta la aplicación">
+		<echo message="Ejecutando la aplicación..." />
+		<java jar="${jar.dir}/${jar.name}" fork="true" />
+	</target>
+
+	<!-- Javadoc -->
+	<target name="javadoc" depends="init" description="Genera la documentación Javadoc">
+		<echo message="Generando documentación Javadoc en ${doc.dir}..." />
+		<javadoc destdir="${doc.dir}" sourcepath="${src.dir}">
+			<fileset dir="${src.dir}">
+				<include name="**/*.java" />
+			</fileset>
+			<classpath refid="classpath" />
+		</javadoc>
+	</target>
+
+
+	<!-- Final -->
+	<target name="clean-build" description="Final de la ejecución" depends="clean, jar" />
+
+	<target name="main" depends="clean,run" />
+
+</project>

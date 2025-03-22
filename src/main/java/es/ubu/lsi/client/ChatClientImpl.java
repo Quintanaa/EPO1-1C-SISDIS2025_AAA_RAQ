@@ -10,20 +10,38 @@ import java.util.Scanner;
 import es.ubu.lsi.common.ChatMessage;
 import es.ubu.lsi.common.ChatMessage.MessageType;
 
+/**
+ * Clase ChatClientImpl
+ * 
+ * @author Rubén Alonso Quintana
+ *
+ */
 public class ChatClientImpl implements ChatClient {
 
-	private String server;
+	private String server = "localhost";
 	private String username;
 	private int port;
 	private boolean carryOn = true;
 	private int id;
 
+	/**
+	 * El cliente en su invocación recibe una dirección IP/nombre de máquina y un nickname. 
+	 * El puerto de conexión es siempre el 1500. Si no se indica el equipo servidor, se toma 
+	 * como valor por defecto localhost. 
+	 * @param server
+	 * @param port
+	 * @param username
+	 */
 	public ChatClientImpl(String server, int port, String username) {
 		this.server = server;
 		this.port = port;
 		this.username = username;
 	}
 
+	/**
+	 * Instancia el cliente y arranca adicionalmente (en el método start) un hilo adicional a través 
+	 * de ChatClientListener.
+	 */
 	@Override
 	public boolean start() {
 		try (Socket socket = new Socket(server, port);
@@ -39,17 +57,7 @@ public class ChatClientImpl implements ChatClient {
 			System.out.println("Conectado como " + username + " con ID " + id);
 
 			// Hilo
-	        new Thread(() -> {
-	            while (carryOn) {
-	                try {
-	                    ChatMessage msg = (ChatMessage) inputStream.readObject();
-	                    System.out.println(msg.getMessage());
-	                } catch (IOException | ClassNotFoundException e) {
-	                    System.out.println("[Error] Conexión cerrada.");
-	                    break;
-	                }
-	            }
-	        }).start();
+	        new Thread (new ChatClientListener(inputStream)).start();
 			// Leer los mensajes
 			Scanner scanner = new Scanner(System.in);
 			while (carryOn) {
@@ -81,6 +89,10 @@ public class ChatClientImpl implements ChatClient {
 		return false;
 	}
 
+	/**
+	 * En el hilo principal se espera a la entrada de consola por parte del usuario para el envío 
+	 * del mensaje (flujo de salida, a través del método sendMessage). 
+	 */
 	@Override
 	public void sendMessage(ChatMessage msg) {
 		try (Socket socket = new Socket(server, port);
@@ -94,14 +106,24 @@ public class ChatClientImpl implements ChatClient {
 		}
 	}
 
+	/**
+	 * Cuando se sale del bucle (Ej: logout) se desconecta. 
+	 */
 	@Override
 	public void disconnect() {
 		carryOn = false;
 		System.out.println("Desconectando del chat...");
 	}
 
+	/**
+	 * Contiene un método main que arranca el hilo principal de ejecución del cliente.
+	 * @param args
+	 */
 	public static void main(String[] args) {
-		// Robustez
+	    if (args.length < 2) {
+	        System.out.println("Error: No se proporcionaron suficientes argumentos.");
+	        return;
+	    }
 		String server = args[0];
 		String username = args[1];
 
@@ -109,6 +131,10 @@ public class ChatClientImpl implements ChatClient {
 		client.start();
 	}
 
+	/**
+	 * Implementa la interfaz Runnable, por lo tanto, redefine el método run para ejecutar 
+	 * el hilo de escucha de mensajes del servidor (flujo de entrada) y mostrar los mensajes entrantes. 
+	 */
 	private class ChatClientListener implements Runnable {
 		private ObjectInputStream inputStream;
 
