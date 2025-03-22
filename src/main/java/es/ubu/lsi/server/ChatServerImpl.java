@@ -100,7 +100,7 @@ public class ChatServerImpl implements ChatServer {
 				continue; //Salto al siguiente usuario.
 			}
 			
-			ChatMessage mensajeOrigen = new ChatMessage(message.getId(), message.getType(), origen + ": " + message.getMessage());
+			ChatMessage mensajeOrigen = new ChatMessage(message.getId(), message.getType(), "<" + origen + "> patrocina el mensaje: " + message.getMessage());
 			ObjectOutputStream outputStream;
 			try {
 				outputStream = entry.getValue();

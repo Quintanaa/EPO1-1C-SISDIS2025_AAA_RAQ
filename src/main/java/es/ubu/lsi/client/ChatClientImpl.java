@@ -147,7 +147,7 @@ public class ChatClientImpl implements ChatClient {
 			while (carryOn) {
 				try {
 					ChatMessage msg = (ChatMessage) inputStream.readObject();
-					System.out.println("Mensaje recibido: " + msg.getMessage());
+					System.out.println(msg.getMessage());
 				} catch (ClassNotFoundException | IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
